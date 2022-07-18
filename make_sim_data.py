@@ -26,8 +26,8 @@ def sim_TRFs(root_folder, outfolder, subjects_dir=None, dim='1D', L=30, fs=100, 
     J = 3 # number of components
     
     print('loading predictors')
-    fg = concatenate(load.unpickle(f'{root_folder}/preds/foreground_predictor.pkl')[:3], 'time') # 2 predictors
-    bg = concatenate(load.unpickle(f'{root_folder}/preds/background_predictor.pkl')[:3], 'time') # 2 predictors
+    fg = load.unpickle(f'{root_folder}/preds/foreground_predictor.pkl') # 2 predictors
+    bg = load.unpickle(f'{root_folder}/preds/background_predictor.pkl') # 2 predictors
     preds = [fg, bg]
     npred = len(preds)
     
@@ -192,7 +192,7 @@ def sim_indiv_clean_MD(t_trfs, Xs):
 def sim_topos(root_folder, outfolder, L, J, npred, rng):
     if not os.path.exists(f'{outfolder}/sim_topos'):
         os.makedirs(f'{outfolder}/sim_topos')
-    topos_in = load.unpickle(f'{root_folder}/sim_data/gt_sensor_topos.pkl')
+    topos_in = load.unpickle(f'{root_folder}/gt_sensor_topos.pkl')
 #     for j in range(J):
 #         topos_in[j].x[0] = 0
     topos = np.zeros((npred, L, J, len(topos_in[0].sensor)))
@@ -208,7 +208,7 @@ def sim_topos(root_folder, outfolder, L, J, npred, rng):
     return topos, topos_in[0].sensor
 
 def sim_source_distributions(root_folder, subjects_dir, L, npred):
-    src_comps = load.unpickle(f'{root_folder}/sim_data/source_distributions/source_components.pkl')
+    src_comps = load.unpickle(f'{root_folder}/source_distributions/source_components.pkl')
     aparcLabels = ['superiortemporal', 'transversetemporal']
     aparcLabels = [l+'-lh' for l in aparcLabels] + [l+'-rh' for l in aparcLabels]
 
@@ -226,8 +226,8 @@ def sim_source_distributions(root_folder, subjects_dir, L, npred):
     for l in range(L):
         print(f'source_comp {l}', ' '*20, end='\r')
         sens1c = []
-        fwd = mne.read_forward_solution(f'{root_folder}/sim_data/source_distributions/fwd_{l:02d}-fwd.fif')
-        invdict = load.unpickle(f'{root_folder}/sim_data/source_distributions/invdict_{l:02d}.pkl')
+        fwd = mne.read_forward_solution(f'{root_folder}/source_distributions/fwd_{l:02d}-fwd.fif')
+        invdict = load.unpickle(f'{root_folder}/source_distributions/invdict_{l:02d}.pkl')
         fwd = mne.convert_forward_solution(fwd, force_fixed=True)
         fwd = load.fiff.forward_operator(fwd, invdict['src_space'], subjects_dir=subjects_dir, parc='aparc')
         fwd = fwd.sub(source=aparcLabels)
@@ -342,7 +342,7 @@ def noise_meg_1D(root_folder, Yc, snr, fs=100, sgap=500, rng=None):
     Y = np.zeros(np.asarray(Yc).shape)
     N = Y.shape[1]
     megnoiseA = []
-    megpath = f'{root_folder}/sim_data/megnoise/noise_1DSS.pkl'
+    megpath = f'{root_folder}/megnoise/noise_1DSS.pkl'
     meg = load.unpickle(megpath)
     meg = concatenate(meg, 'time').x
     for l in range(Y.shape[0]):
@@ -360,13 +360,13 @@ def noise_meg_MD(root_folder, Yc, snr, spatialdim, dim, fs=100, sgap=500, rng=No
     L, M, N = Y.shape
     megnoiseA = np.zeros((L, M, N))
     if dim=='sensor':
-        megpath = f'{root_folder}/sim_data/megnoise/noise_sensor.pkl'
+        megpath = f'{root_folder}/megnoise/noise_sensor.pkl'
         meg = load.unpickle(megpath)
     elif dim=='source':
-        megpath = f'{root_folder}/sim_data/megnoise/noise_source.pkl'
+        megpath = f'{root_folder}/megnoise/noise_source.pkl'
         ds = load.unpickle(megpath)
         meg = concatenate(ds['source'], 'time')
-        spatialdim.subjects_dir =  f'{root_folder}/sim_data/source_distributions/mri'
+        spatialdim.subjects_dir =  f'{root_folder}/source_distributions/mri'
         spatialdim.subject = 'fsaverage'
     megx = meg.x
     for l in range(Y.shape[0]):
